@@ -5,7 +5,8 @@ import java.io.File
 enum class VolumeType {
     INTERNAL,
     SD_CARD,
-    USB_OTG
+    USB_OTG,
+    ROOT
 }
 
 data class StorageVolumeItem(

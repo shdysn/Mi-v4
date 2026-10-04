@@ -193,21 +193,40 @@ fun ChecksumDialog(
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(
-                    value = verifyInput,
-                    onValueChange = { verifyInput = it.trim() },
-                    placeholder = { Text("Paste expected MD5 or SHA-256 to compare...") },
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    trailingIcon = {
-                        if (verifyInput.isNotEmpty()) {
-                            IconButton(onClick = { verifyInput = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = verifyInput,
+                        onValueChange = { verifyInput = it.trim() },
+                        placeholder = { Text("Paste expected hash...") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        trailingIcon = {
+                            if (verifyInput.isNotEmpty()) {
+                                IconButton(onClick = { verifyInput = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                }
                             }
                         }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledTonalButton(
+                        onClick = {
+                            val clip = (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip
+                            if (clip != null && clip.itemCount > 0) {
+                                verifyInput = clip.getItemAt(0).text?.toString()?.trim() ?: ""
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Paste")
                     }
-                )
+                }
 
                 if (verifyInput.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(10.dp))

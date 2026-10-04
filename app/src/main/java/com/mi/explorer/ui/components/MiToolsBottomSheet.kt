@@ -44,6 +44,7 @@ fun MiToolsBottomSheet(
     onCleanerClick: () -> Unit,
     onAppManagerClick: () -> Unit,
     onAppInstallerClick: () -> Unit = {},
+    onRootBrowserClick: () -> Unit = {},
     onFtpClick: () -> Unit,
     onDualPaneToggle: () -> Unit,
     isDualPaneActive: Boolean = false,
@@ -84,11 +85,19 @@ fun MiToolsBottomSheet(
         ),
         ToolItem(
             id = "cloud",
-            title = "Cloud & Network",
-            subtitle = "SMB, WebDAV, FTP",
+            title = "Cloud & Network Drives",
+            subtitle = "Google Drive, OneDrive, SMB",
             icon = Icons.Default.CloudQueue,
             iconColor = Color(0xFF0EA5E9),
             onClick = { onDismiss(); onNetworkDrivesClick() }
+        ),
+        ToolItem(
+            id = "root_browser",
+            title = "Root Explorer",
+            subtitle = "Superuser System Browser",
+            icon = Icons.Default.Security,
+            iconColor = Color(0xFFDC2626),
+            onClick = { onDismiss(); onRootBrowserClick() }
         ),
         ToolItem(
             id = "trash",

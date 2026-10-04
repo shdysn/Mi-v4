@@ -40,7 +40,9 @@ import com.mi.explorer.data.model.ApkFileItem
 import com.mi.explorer.ui.theme.MiGreen
 import com.mi.explorer.ui.theme.MiOrange
 import com.mi.explorer.utils.FileOpener
+import com.mi.explorer.utils.InAppPackageInstallerHelper
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 enum class InAppInstallProgress {
     IDLE,
@@ -59,7 +61,10 @@ fun ApkInstallDialog(
     onChecksum: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var installProgress by remember { mutableStateOf(InAppInstallProgress.IDLE) }
+    var stagingProgress by remember { mutableStateOf(0f) }
+    var stagingMessage by remember { mutableStateOf("") }
     var showPermissionsList by remember { mutableStateOf(false) }
 
     // Check if install unknown apps permission is granted
@@ -477,11 +482,19 @@ fun ApkInstallDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = MiGreen)
+                        LinearProgressIndicator(
+                            progress = { stagingProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = MiGreen
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Staging package & invoking installer...",
+                            text = stagingMessage.ifEmpty { "Staging package in session..." },
                             style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
                             color = MiGreen
                         )
                     }
@@ -492,11 +505,24 @@ fun ApkInstallDialog(
                 Button(
                     onClick = {
                         installProgress = InAppInstallProgress.STAGING
-                        val launched = FileOpener.installApk(context, apk.file)
-                        if (launched) {
-                            installProgress = InAppInstallProgress.COMPLETED
-                        } else {
-                            installProgress = InAppInstallProgress.IDLE
+                        scope.launch {
+                            val res = InAppPackageInstallerHelper.installApkSession(
+                                context = context,
+                                apkFile = apk.file,
+                                packageName = apk.packageName
+                            ) { progress, message ->
+                                stagingProgress = progress
+                                stagingMessage = message
+                            }
+                            res.fold(
+                                onSuccess = {
+                                    installProgress = InAppInstallProgress.COMPLETED
+                                },
+                                onFailure = {
+                                    val fallback = FileOpener.installApk(context, apk.file)
+                                    installProgress = if (fallback) InAppInstallProgress.COMPLETED else InAppInstallProgress.IDLE
+                                }
+                            )
                         }
                     },
                     modifier = Modifier

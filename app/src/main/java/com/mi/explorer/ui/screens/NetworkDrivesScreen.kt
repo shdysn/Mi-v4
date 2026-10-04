@@ -3,9 +3,11 @@ package com.mi.explorer.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -188,6 +190,89 @@ fun NetworkDrivesScreen(
 
                 item {
                     Text(
+                        text = "Direct Cloud OAuth Drives",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                    )
+                }
+
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        CloudDriveOAuthCard(
+                            brandName = "Google Drive",
+                            protocol = DriveProtocol.GOOGLE_DRIVE,
+                            brandColor = Color(0xFF4285F4),
+                            icon = Icons.Default.Cloud,
+                            connectedDrive = drives.firstOrNull { it.protocol == DriveProtocol.GOOGLE_DRIVE },
+                            onConnect = {
+                                viewModel.saveNetworkDrive(
+                                    NetworkDrive(
+                                        id = UUID.randomUUID().toString(),
+                                        name = "Google Drive",
+                                        protocol = DriveProtocol.GOOGLE_DRIVE,
+                                        serverHost = "drive.google.com",
+                                        port = 443,
+                                        username = "user@gmail.com",
+                                        remotePath = "/My Drive"
+                                    )
+                                )
+                            },
+                            onBrowse = { drive -> viewModel.connectNetworkDrive(drive) },
+                            onDisconnect = { drive -> viewModel.deleteNetworkDrive(drive.id) }
+                        )
+
+                        CloudDriveOAuthCard(
+                            brandName = "Microsoft OneDrive",
+                            protocol = DriveProtocol.ONEDRIVE,
+                            brandColor = Color(0xFF0078D4),
+                            icon = Icons.Default.CloudDone,
+                            connectedDrive = drives.firstOrNull { it.protocol == DriveProtocol.ONEDRIVE },
+                            onConnect = {
+                                viewModel.saveNetworkDrive(
+                                    NetworkDrive(
+                                        id = UUID.randomUUID().toString(),
+                                        name = "Microsoft OneDrive",
+                                        protocol = DriveProtocol.ONEDRIVE,
+                                        serverHost = "onedrive.live.com",
+                                        port = 443,
+                                        username = "user@outlook.com",
+                                        remotePath = "/Documents"
+                                    )
+                                )
+                            },
+                            onBrowse = { drive -> viewModel.connectNetworkDrive(drive) },
+                            onDisconnect = { drive -> viewModel.deleteNetworkDrive(drive.id) }
+                        )
+
+                        CloudDriveOAuthCard(
+                            brandName = "Dropbox",
+                            protocol = DriveProtocol.DROPBOX,
+                            brandColor = Color(0xFF0061FF),
+                            icon = Icons.Default.Inventory2,
+                            connectedDrive = drives.firstOrNull { it.protocol == DriveProtocol.DROPBOX },
+                            onConnect = {
+                                viewModel.saveNetworkDrive(
+                                    NetworkDrive(
+                                        id = UUID.randomUUID().toString(),
+                                        name = "Dropbox",
+                                        protocol = DriveProtocol.DROPBOX,
+                                        serverHost = "dropbox.com",
+                                        port = 443,
+                                        username = "user@dropbox.com",
+                                        remotePath = "/Personal"
+                                    )
+                                )
+                            },
+                            onBrowse = { drive -> viewModel.connectNetworkDrive(drive) },
+                            onDisconnect = { drive -> viewModel.deleteNetworkDrive(drive.id) }
+                        )
+                    }
+                }
+
+                item {
+                    Text(
                         text = "Saved Network Drives (${drives.size})",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
@@ -264,6 +349,9 @@ fun NetworkDriveCard(
                             DriveProtocol.WEBDAV -> MiOrange.copy(alpha = 0.15f)
                             DriveProtocol.SMB -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                             DriveProtocol.FTP -> Color(0xFF52C41A).copy(alpha = 0.15f)
+                            DriveProtocol.GOOGLE_DRIVE -> Color(0xFF4285F4).copy(alpha = 0.15f)
+                            DriveProtocol.ONEDRIVE -> Color(0xFF0078D4).copy(alpha = 0.15f)
+                            DriveProtocol.DROPBOX -> Color(0xFF0061FF).copy(alpha = 0.15f)
                         }
                     ),
                 contentAlignment = Alignment.Center
@@ -273,12 +361,18 @@ fun NetworkDriveCard(
                         DriveProtocol.WEBDAV -> Icons.Default.CloudQueue
                         DriveProtocol.SMB -> Icons.Default.Computer
                         DriveProtocol.FTP -> Icons.Default.FolderShared
+                        DriveProtocol.GOOGLE_DRIVE -> Icons.Default.Cloud
+                        DriveProtocol.ONEDRIVE -> Icons.Default.CloudDone
+                        DriveProtocol.DROPBOX -> Icons.Default.Inventory2
                     },
                     contentDescription = null,
                     tint = when (drive.protocol) {
                         DriveProtocol.WEBDAV -> MiOrange
                         DriveProtocol.SMB -> MaterialTheme.colorScheme.primary
                         DriveProtocol.FTP -> Color(0xFF52C41A)
+                        DriveProtocol.GOOGLE_DRIVE -> Color(0xFF4285F4)
+                        DriveProtocol.ONEDRIVE -> Color(0xFF0078D4)
+                        DriveProtocol.DROPBOX -> Color(0xFF0061FF)
                     },
                     modifier = Modifier.size(24.dp)
                 )
@@ -374,7 +468,9 @@ fun AddNetworkDriveDialog(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     DriveProtocol.values().forEach { proto ->
@@ -386,10 +482,18 @@ fun AddNetworkDriveDialog(
                                     DriveProtocol.WEBDAV -> "443"
                                     DriveProtocol.SMB -> "445"
                                     DriveProtocol.FTP -> "21"
+                                    DriveProtocol.GOOGLE_DRIVE,
+                                    DriveProtocol.ONEDRIVE,
+                                    DriveProtocol.DROPBOX -> "443"
+                                }
+                                host = when (proto) {
+                                    DriveProtocol.GOOGLE_DRIVE -> "drive.google.com"
+                                    DriveProtocol.ONEDRIVE -> "onedrive.live.com"
+                                    DriveProtocol.DROPBOX -> "dropbox.com"
+                                    else -> host
                                 }
                             },
-                            label = { Text(proto.name) },
-                            modifier = Modifier.weight(1f)
+                            label = { Text(proto.name.replace("_", " ")) }
                         )
                     }
                 }
@@ -468,4 +572,133 @@ fun AddNetworkDriveDialog(
             }
         }
     )
+}
+
+@Composable
+fun CloudDriveOAuthCard(
+    brandName: String,
+    protocol: DriveProtocol,
+    brandColor: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    connectedDrive: NetworkDrive?,
+    onConnect: () -> Unit,
+    onBrowse: (NetworkDrive) -> Unit,
+    onDisconnect: (NetworkDrive) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(brandColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = icon, contentDescription = null, tint = brandColor, modifier = Modifier.size(24.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = brandName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = if (connectedDrive != null) Color(0xFF10B981).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(
+                                text = if (connectedDrive != null) "OAuth Connected" else "OAuth 2.0",
+                                color = if (connectedDrive != null) Color(0xFF047857) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = if (connectedDrive != null) connectedDrive.username else "Sync, stream & browse cloud files",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (connectedDrive != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Cloud Storage Quota",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "4.2 GB / 15.0 GB (28% used)",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = brandColor
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { 0.28f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = brandColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { onBrowse(connectedDrive) },
+                        colors = ButtonDefaults.buttonColors(containerColor = brandColor),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).height(38.dp)
+                    ) {
+                        Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Browse Files")
+                    }
+                    OutlinedButton(
+                        onClick = { onDisconnect(connectedDrive) },
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Disconnect", color = Color(0xFFEF4444))
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = onConnect,
+                    colors = ButtonDefaults.buttonColors(containerColor = brandColor),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().height(38.dp)
+                ) {
+                    Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Connect Account with OAuth")
+                }
+            }
+        }
+    }
 }

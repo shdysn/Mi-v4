@@ -82,6 +82,7 @@ fun MainScreen(
     var openWithTarget by remember { mutableStateOf<FileItem?>(null) }
     var showBatchRenameDialog by remember { mutableStateOf(false) }
     var tagTarget by remember { mutableStateOf<FileItem?>(null) }
+    var exifCleanerTarget by remember { mutableStateOf<FileItem?>(null) }
 
     Scaffold(
         modifier = modifier.testTag("main_screen"),
@@ -254,6 +255,7 @@ fun MainScreen(
                                 "checksum" -> checksumTarget = item
                                 "vault" -> viewModel.addFileToVault(item)
                                 "tags" -> tagTarget = item
+                                "clean_exif" -> exifCleanerTarget = item
                                 "fast_share" -> viewModel.openFastShare(listOf(item))
                                 "copy" -> viewModel.copySingle(item)
                                 "cut" -> viewModel.cutSingle(item)
@@ -313,6 +315,7 @@ fun MainScreen(
                         onSocialClick = { viewModel.openSocialHub() },
                         onAppManagerClick = { viewModel.openAppManager() },
                         onAppInstallerClick = { viewModel.openAppInstaller() },
+                        onRootBrowserClick = { viewModel.openRootBrowser() },
                         onVaultClick = { viewModel.openVault() },
                         onDuplicatesClick = { viewModel.openDuplicateFinder() },
                         onAnalyzerClick = { viewModel.openStorageAnalyzer() },
@@ -362,6 +365,7 @@ fun MainScreen(
                                 "checksum" -> checksumTarget = item
                                 "vault" -> viewModel.addFileToVault(item)
                                 "tags" -> tagTarget = item
+                                "clean_exif" -> exifCleanerTarget = item
                                 "fast_share" -> viewModel.openFastShare(listOf(item))
                                 "copy" -> viewModel.copySingle(item)
                                 "cut" -> viewModel.cutSingle(item)
@@ -610,6 +614,17 @@ fun MainScreen(
                 viewModel.toggleTagForFile(item.file, tag.id)
             },
             onDismiss = { tagTarget = null }
+        )
+    }
+
+    exifCleanerTarget?.let { item ->
+        ExifCleanerDialog(
+            item = item,
+            onDismiss = { exifCleanerTarget = null },
+            onCleanSaved = {
+                viewModel.refreshCurrentDirectory()
+                viewModel.showMessage("Photo EXIF metadata stripped!")
+            }
         )
     }
 
@@ -972,6 +987,7 @@ fun StorageTabContent(
     onSocialClick: () -> Unit = {},
     onAppManagerClick: () -> Unit,
     onAppInstallerClick: () -> Unit = {},
+    onRootBrowserClick: () -> Unit = {},
     onVaultClick: () -> Unit,
     onDuplicatesClick: () -> Unit,
     onAnalyzerClick: () -> Unit,
@@ -1603,6 +1619,7 @@ fun StorageTabContent(
             onCleanerClick = onCleanClick,
             onAppManagerClick = onAppManagerClick,
             onAppInstallerClick = onAppInstallerClick,
+            onRootBrowserClick = onRootBrowserClick,
             onFtpClick = onFtpClick,
             onDualPaneToggle = onDualPaneToggle,
             isDualPaneActive = isDualPaneActive,

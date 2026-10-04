@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mi.explorer.data.model.FileItem
+import com.mi.explorer.ui.components.ExifCleanerDialog
 import com.mi.explorer.ui.theme.MiOrange
 import com.mi.explorer.ui.viewmodel.ExplorerViewModel
 
@@ -31,6 +32,7 @@ fun ImageViewerScreen(
 ) {
     val state by viewModel.imageViewerState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showExifCleaner by remember { mutableStateOf(false) }
 
     val bitmap = remember(state.currentFile?.absolutePath) {
         state.currentFile?.let { file ->
@@ -71,6 +73,9 @@ fun ImageViewerScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showExifCleaner = true }) {
+                        Icon(Icons.Default.Security, contentDescription = "EXIF Privacy Cleaner", tint = Color(0xFF10B981))
+                    }
                     IconButton(onClick = { showInfoDialog = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Details")
                     }
@@ -161,6 +166,16 @@ fun ImageViewerScreen(
                 TextButton(onClick = { showInfoDialog = false }) {
                     Text("OK")
                 }
+            }
+        )
+    }
+
+    if (showExifCleaner && state.currentFile != null) {
+        ExifCleanerDialog(
+            item = FileItem(state.currentFile!!),
+            onDismiss = { showExifCleaner = false },
+            onCleanSaved = {
+                viewModel.showMessage("Photo metadata stripped successfully!")
             }
         )
     }

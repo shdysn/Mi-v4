@@ -252,6 +252,16 @@ fun FileActionDropdownMenu(
                 onMenuAction("tags")
             }
         )
+        if (item.category == FileCategory.IMAGE) {
+            DropdownMenuItem(
+                text = { Text("Photo EXIF Privacy Cleaner") },
+                leadingIcon = { Icon(Icons.Default.Security, contentDescription = null, tint = Color(0xFF10B981)) },
+                onClick = {
+                    onDismiss()
+                    onMenuAction("clean_exif")
+                }
+            )
+        }
         DropdownMenuItem(
             text = { Text("Fast Share (Wi-Fi P2P)") },
             leadingIcon = { Icon(Icons.Default.WifiTethering, contentDescription = null, tint = Color(0xFF10B981)) },

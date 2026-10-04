@@ -51,7 +51,8 @@ enum class Screen {
     STATUS_SAVER,
     SMART_COLLECTIONS,
     TIME_MACHINE,
-    APP_INSTALLER
+    APP_INSTALLER,
+    ROOT_BROWSER
 }
 
 data class PdfViewerState(
@@ -1788,6 +1789,10 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
     fun filterByTag(tagId: String?) {
         selectedTagFilter.value = tagId
         refreshCurrentDirectory()
+    }
+
+    fun openRootBrowser() {
+        navigateToScreen(Screen.ROOT_BROWSER)
     }
 
     // ==========================================

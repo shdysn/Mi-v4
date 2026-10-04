@@ -484,7 +484,7 @@ fun AppInstallerScreen(
                             }
                         },
                         onInstall = {
-                            FileOpener.installApk(context, apk.file)
+                            inspectingApk = apk
                         },
                         onInspect = {
                             inspectingApk = apk
