@@ -1,9 +1,12 @@
 package com.mi.explorer.ui.screens
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
@@ -114,6 +117,29 @@ fun AppManagerScreen(
             "NOT_INSTALLED" -> base.filter { !it.isInstalled }
             "INSTALLED" -> base.filter { it.isInstalled }
             else -> base
+        }
+    }
+
+    // In-App APK / XAPK / APKS file picker launcher
+    val apkPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val displayName = getFileNameFromUri(context, uri)
+            try {
+                val cacheFile = File(context.cacheDir, "installer_$displayName").apply {
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        java.io.FileOutputStream(this).use { output -> input.copyTo(output) }
+                    }
+                }
+                if (displayName.lowercase().endsWith(".xapk") || displayName.lowercase().endsWith(".apks")) {
+                    viewModel.openXapkFile(cacheFile)
+                } else {
+                    viewModel.openApkInstallDialog(cacheFile)
+                }
+            } catch (e: Exception) {
+                viewModel.showMessage("Failed to load APK: ${e.localizedMessage}")
+            }
         }
     }
 
@@ -308,6 +334,64 @@ fun AppManagerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
             )
+
+            // In-App Package Installer 1-Tap Trigger
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MiGreen.copy(alpha = 0.12f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clickable {
+                        apkPickerLauncher.launch(
+                            arrayOf(
+                                "application/vnd.android.package-archive",
+                                "application/octet-stream",
+                                "*/*"
+                            )
+                        )
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(MiGreen),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Install APK / Bundle from Device",
+                            style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF059669)
+                        )
+                        Text(
+                            text = "Pick .apk, .xapk, or .apks to inspect and install in-app",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = Color(0xFF059669),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
             // Batch Progress Indicator
             if (isBatchBackingUp) {
@@ -1521,3 +1605,25 @@ private fun TabPill(
         }
     }
 }
+
+private fun getFileNameFromUri(context: Context, uri: Uri): String {
+    var name = "app.apk"
+    if (uri.scheme == "content") {
+        try {
+            context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idx = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (idx != -1) {
+                        name = cursor.getString(idx)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
+    } else if (uri.path != null) {
+        name = java.io.File(uri.path!!).name
+    }
+    return name
+}
+

@@ -73,6 +73,23 @@ class MainActivity : ComponentActivity() {
             val lowerMime = mimeType.lowercase()
 
             when {
+                // APK, XAPK, APKS Installation Packages (In-App Installer)
+                lowerName.endsWith(".apk") || lowerName.endsWith(".xapk") || lowerName.endsWith(".apks") || lowerMime.contains("android.package-archive") -> {
+                    try {
+                        val cacheFile = java.io.File(cacheDir, displayName).apply {
+                            contentResolver.openInputStream(uri)?.use { input ->
+                                outputStream().use { output -> input.copyTo(output) }
+                            }
+                        }
+                        if (lowerName.endsWith(".xapk") || lowerName.endsWith(".apks")) {
+                            viewModel.openXapkFile(cacheFile)
+                        } else {
+                            viewModel.openApkInstallDialog(cacheFile)
+                        }
+                    } catch (e: Exception) {
+                        viewModel.showMessage("Failed to open package: ${e.localizedMessage}")
+                    }
+                }
                 // PDF Documents
                 lowerName.endsWith(".pdf") || lowerMime.contains("pdf") -> {
                     try {
@@ -289,6 +306,9 @@ fun MiMainApp(viewModel: ExplorerViewModel) {
                 },
                 onShare = {
                     FileOpener.shareFile(context, FileItem(apk.file))
+                },
+                onFastShare = {
+                    viewModel.sendBackupViaFastShare(apk)
                 },
                 onChecksum = {
                     apkChecksumTarget = FileItem(apk.file)

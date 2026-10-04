@@ -22,6 +22,8 @@ data class ApkFileItem(
     val installedVersionCode: Long = 0L,
     val isBackup: Boolean = false,
     val splitCount: Int = 0,
+    val permissions: List<String> = emptyList(),
+    val supportedAbis: List<String> = emptyList(),
     val icon: Drawable? = null,
     val lastModified: Long = file.lastModified()
 ) {
@@ -39,7 +41,42 @@ data class ApkFileItem(
 
     val isCurrentVersion: Boolean
         get() = isInstalled && installedVersionCode > 0 && versionCode == installedVersionCode
+
+    val minSdkLabel: String get() = getAndroidVersionName(minSdk)
+    val targetSdkLabel: String get() = getAndroidVersionName(targetSdk)
+
+    val dangerousPermissions: List<String> get() {
+        return permissions.filter { perm ->
+            val upper = perm.uppercase()
+            upper.contains("CAMERA") ||
+            upper.contains("LOCATION") ||
+            upper.contains("RECORD_AUDIO") ||
+            upper.contains("CONTACTS") ||
+            upper.contains("SMS") ||
+            upper.contains("STORAGE") ||
+            upper.contains("NOTIFICATIONS") ||
+            upper.contains("PHONE") ||
+            upper.contains("BLUETOOTH")
+        }.map { it.substringAfterLast('.') }
+    }
 }
+
+fun getAndroidVersionName(api: Int): String = when (api) {
+    36 -> "Android 16"
+    35 -> "Android 15"
+    34 -> "Android 14"
+    33 -> "Android 13"
+    32, 31 -> "Android 12"
+    30 -> "Android 11"
+    29 -> "Android 10"
+    28 -> "Android 9.0 Pie"
+    27, 26 -> "Android 8.0 Oreo"
+    25, 24 -> "Android 7.0 Nougat"
+    23 -> "Android 6.0 Marshmallow"
+    22, 21 -> "Android 5.0 Lollipop"
+    else -> if (api > 0) "Android API $api" else "Universal (All Androids)"
+}
+
 
 data class AppBackupGroup(
     val packageName: String,

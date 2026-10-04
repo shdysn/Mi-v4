@@ -13,12 +13,12 @@ import java.io.File
 
 object FileOpener {
 
-    fun installApk(context: Context, file: File) {
+    fun installApk(context: Context, file: File): Boolean {
         if (!file.exists()) {
             Toast.makeText(context, "APK file does not exist", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
-        try {
+        return try {
             val uri: Uri = try {
                 FileProvider.getUriForFile(
                     context,
@@ -37,8 +37,10 @@ object FileOpener {
                 }
             }
             context.startActivity(intent)
+            true
         } catch (e: Exception) {
             Toast.makeText(context, "Cannot launch installer: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            false
         }
     }
 

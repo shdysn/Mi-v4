@@ -175,7 +175,8 @@ class AppsRepository(private val context: Context) {
 
     fun parseApkFile(file: File, isBackup: Boolean = false): ApkFileItem {
         return try {
-            val pkgInfo = pm.getPackageArchiveInfo(file.absolutePath, 0)
+            val flags = PackageManager.GET_PERMISSIONS or PackageManager.GET_META_DATA
+            val pkgInfo = pm.getPackageArchiveInfo(file.absolutePath, flags)
             val appInfo = pkgInfo?.applicationInfo
             if (pkgInfo != null && appInfo != null) {
                 appInfo.sourceDir = file.absolutePath
@@ -218,6 +219,29 @@ class AppsRepository(private val context: Context) {
                     pkgInfo.versionCode.toLong()
                 }
 
+                // Extract requested permissions
+                val permissions = pkgInfo.requestedPermissions?.toList() ?: emptyList()
+
+                // Extract supported ABIs by inspecting lib/ folder inside APK zip
+                val abis = mutableSetOf<String>()
+                try {
+                    java.util.zip.ZipFile(file).use { zf ->
+                        val entries = zf.entries()
+                        while (entries.hasMoreElements()) {
+                            val entry = entries.nextElement()
+                            if (entry.name.startsWith("lib/")) {
+                                val abi = entry.name.substringAfter("lib/").substringBefore('/')
+                                if (abi.isNotEmpty() && !abi.contains(".")) {
+                                    abis.add(abi)
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    // ignore
+                }
+                val supportedAbis = if (abis.isEmpty()) listOf("Universal") else abis.toList()
+
                 ApkFileItem(
                     file = file,
                     name = file.name,
@@ -233,6 +257,8 @@ class AppsRepository(private val context: Context) {
                     installedVersionName = installedVersionName,
                     installedVersionCode = installedVersionCode,
                     isBackup = isBackup,
+                    permissions = permissions,
+                    supportedAbis = supportedAbis,
                     icon = icon,
                     lastModified = file.lastModified()
                 )
