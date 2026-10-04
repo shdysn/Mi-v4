@@ -286,6 +286,7 @@ fun MiMainApp(viewModel: ExplorerViewModel) {
                 Screen.STATUS_SAVER -> StatusSaverScreen(viewModel = viewModel)
                 Screen.SMART_COLLECTIONS -> SmartCollectionsScreen(viewModel = viewModel)
                 Screen.TIME_MACHINE -> TimeMachineScreen(viewModel = viewModel)
+                Screen.APP_INSTALLER -> AppInstallerScreen(viewModel = viewModel)
             }
         }
 

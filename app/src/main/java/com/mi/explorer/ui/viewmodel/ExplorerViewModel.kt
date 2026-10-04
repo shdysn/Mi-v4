@@ -50,7 +50,8 @@ enum class Screen {
     FILE_SHREDDER,
     STATUS_SAVER,
     SMART_COLLECTIONS,
-    TIME_MACHINE
+    TIME_MACHINE,
+    APP_INSTALLER
 }
 
 data class PdfViewerState(
@@ -819,7 +820,7 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
     // Category Screen
     fun openCategory(category: FileCategory, title: String) {
         if (category == FileCategory.APK) {
-            openAppManager(ApkTab.INSTALLED_APPS)
+            openAppInstaller()
             return
         }
 
@@ -990,6 +991,11 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
     }
 
     // App & APK Manager (Cloner / Extractor & Downgrade Hub)
+    fun openAppInstaller() {
+        navigateToScreen(Screen.APP_INSTALLER)
+        loadStorageApks()
+    }
+
     fun openAppManager(tab: ApkTab = ApkTab.INSTALLED_APPS) {
         apkScreenTab.value = tab
         navigateToScreen(Screen.APP_MANAGER)

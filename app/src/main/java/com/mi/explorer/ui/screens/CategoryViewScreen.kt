@@ -83,13 +83,13 @@ fun CategoryViewScreen(
                     }
                     if (state.category == FileCategory.APK) {
                         FilledTonalButton(
-                            onClick = { viewModel.openAppManager(tab = ApkTab.INSTALLED_APPS) },
+                            onClick = { viewModel.openAppInstaller() },
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
                         ) {
-                            Icon(Icons.Default.Apps, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Installed Apps", style = MaterialTheme.typography.labelMedium)
+                            Text("App Installer", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }

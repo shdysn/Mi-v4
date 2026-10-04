@@ -303,9 +303,16 @@ fun MainScreen(
                         onFastShareClick = { viewModel.openFastShare() },
                         onFtpClick = { viewModel.openFtpServer() },
                         onDualPaneToggle = { viewModel.toggleDualPane() },
-                        onCategoryClick = { cat, title -> viewModel.openCategory(cat, title) },
+                        onCategoryClick = { cat, title ->
+                            if (cat == FileCategory.APK) {
+                                viewModel.openAppInstaller()
+                            } else {
+                                viewModel.openCategory(cat, title)
+                            }
+                        },
                         onSocialClick = { viewModel.openSocialHub() },
                         onAppManagerClick = { viewModel.openAppManager() },
+                        onAppInstallerClick = { viewModel.openAppInstaller() },
                         onVaultClick = { viewModel.openVault() },
                         onDuplicatesClick = { viewModel.openDuplicateFinder() },
                         onAnalyzerClick = { viewModel.openStorageAnalyzer() },
@@ -964,6 +971,7 @@ fun StorageTabContent(
     onCategoryClick: (FileCategory, String) -> Unit,
     onSocialClick: () -> Unit = {},
     onAppManagerClick: () -> Unit,
+    onAppInstallerClick: () -> Unit = {},
     onVaultClick: () -> Unit,
     onDuplicatesClick: () -> Unit,
     onAnalyzerClick: () -> Unit,
@@ -1072,6 +1080,15 @@ fun StorageTabContent(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        item {
+                            UtilityCard(
+                                title = "App Installer",
+                                subtitle = "Install APK / XAPK",
+                                icon = Icons.Default.Download,
+                                color = Color(0xFF059669),
+                                onClick = onAppInstallerClick
+                            )
+                        }
                         item {
                             UtilityCard(
                                 title = "Private Vault",
@@ -1585,6 +1602,7 @@ fun StorageTabContent(
             onDuplicatesClick = onDuplicatesClick,
             onCleanerClick = onCleanClick,
             onAppManagerClick = onAppManagerClick,
+            onAppInstallerClick = onAppInstallerClick,
             onFtpClick = onFtpClick,
             onDualPaneToggle = onDualPaneToggle,
             isDualPaneActive = isDualPaneActive,

@@ -43,12 +43,21 @@ fun MiToolsBottomSheet(
     onDuplicatesClick: () -> Unit,
     onCleanerClick: () -> Unit,
     onAppManagerClick: () -> Unit,
+    onAppInstallerClick: () -> Unit = {},
     onFtpClick: () -> Unit,
     onDualPaneToggle: () -> Unit,
     isDualPaneActive: Boolean = false,
     onSocialClick: () -> Unit = {}
 ) {
     val tools = listOf(
+        ToolItem(
+            id = "app_installer",
+            title = "App Installer",
+            subtitle = "Install APK, XAPK, APKS",
+            icon = Icons.Default.Download,
+            iconColor = Color(0xFF059669),
+            onClick = { onDismiss(); onAppInstallerClick() }
+        ),
         ToolItem(
             id = "social",
             title = "Social Folders",
