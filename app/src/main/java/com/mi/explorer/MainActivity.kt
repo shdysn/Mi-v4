@@ -73,6 +73,31 @@ class MainActivity : ComponentActivity() {
             val lowerMime = mimeType.lowercase()
 
             when {
+                // Video Files (When opened from any other file manager, gallery, WhatsApp, browser)
+                lowerMime.startsWith("video/") ||
+                lowerName.endsWith(".mp4") || lowerName.endsWith(".mkv") || lowerName.endsWith(".avi") ||
+                lowerName.endsWith(".mov") || lowerName.endsWith(".3gp") || lowerName.endsWith(".flv") ||
+                lowerName.endsWith(".webm") || lowerName.endsWith(".ts") || lowerName.endsWith(".m4v") ||
+                lowerName.endsWith(".wmv") || lowerName.endsWith(".rmvb") || lowerName.endsWith(".mpeg") -> {
+                    try {
+                        val videoFile = if (uri.scheme == "file" && uri.path != null && java.io.File(uri.path!!).exists()) {
+                            java.io.File(uri.path!!)
+                        } else {
+                            java.io.File(cacheDir, displayName).apply {
+                                contentResolver.openInputStream(uri)?.use { input ->
+                                    outputStream().use { output -> input.copyTo(output) }
+                                }
+                            }
+                        }
+                        if (videoFile.exists()) {
+                            viewModel.openVideoPlayer(videoFile)
+                        } else {
+                            viewModel.showMessage("Unable to load video")
+                        }
+                    } catch (e: Exception) {
+                        viewModel.showMessage("Error opening video: ${e.localizedMessage}")
+                    }
+                }
                 // APK, XAPK, APKS Installation Packages (In-App Installer)
                 lowerName.endsWith(".apk") || lowerName.endsWith(".xapk") || lowerName.endsWith(".apks") || lowerMime.contains("android.package-archive") -> {
                     try {

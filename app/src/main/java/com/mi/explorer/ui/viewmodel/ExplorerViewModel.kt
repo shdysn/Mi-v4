@@ -1609,6 +1609,14 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
         navigateToScreen(Screen.VIDEO_PLAYER)
     }
 
+    fun openVideoPlayer(file: File) {
+        val item = FileItem(file)
+        val fullList = file.parentFile?.listFiles()?.filter {
+            it.isFile && it.extension.lowercase() in listOf("mp4", "mkv", "avi", "mov", "3gp", "flv", "m4v", "wmv", "rmvb", "ts", "mpeg", "webm")
+        }?.map { FileItem(it) } ?: listOf(item)
+        playVideo(item, fullList)
+    }
+
     fun playNextVideo() {
         val state = _videoPlayerState.value
         if (state.playlist.isEmpty()) return
